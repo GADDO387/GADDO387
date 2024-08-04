@@ -8,10 +8,10 @@ time.sleep(2)  # Wait for the serial connection to initialize
 
 # Connect to MariaDB database
 db = mariadb.connect(
-    host="localhost",
-    user="yourusername",  # Replace with your MariaDB username
-    password="yourpassword",  # Replace with your MariaDB password
-    database="SensorData"
+    host="172.20.10.4",
+    user="Gaddo",  # Replace with your MariaDB username
+    password="12345",  # Replace with your MariaDB password
+    database="sensor_data"  # Updated database name
 )
 
 cursor = db.cursor()
@@ -21,7 +21,7 @@ while True:
         line = ser.readline().decode('utf-8').rstrip()
         print(line)
         
-        # Parse the line for humidity and temperature
+        # Parse the line for humidity, temperature, and luxvalue
         try:
             if "Average Humidity:" in line:
                 humidity = float(line.split(": ")[1].replace(" RH", ""))
@@ -29,14 +29,16 @@ while True:
                 avgTempC = float(line.split(": ")[1].replace("°C", ""))
                 line = ser.readline().decode('utf-8').rstrip()
                 avgTempF = float(line.split(": ")[1].replace("°F", ""))
-                
+                line = ser.readline().decode('utf-8').rstrip()
+                luxvalue = float(line.split(": ")[1])  # Assuming the line contains lux value
+
                 # Insert data into the MariaDB database
-                sql = "INSERT INTO DHT11Readings (humidity, temperature) VALUES (?, ?)"
-                val = (humidity, avgTempC)
+                sql = "INSERT INTO DHT11 (humidity, temperature, luxvalue) VALUES (?, ?, ?)"
+                val = (humidity, avgTempC, luxvalue)
                 cursor.execute(sql, val)
                 db.commit()
 
-                print(f"Inserted into DB: Humidity={humidity}, Temperature={avgTempC}°C, {avgTempF}°F")
+                print(f"Inserted into DB: Humidity={humidity}, Temperature={avgTempC}°C, {avgTempF}°F, LuxValue={luxvalue}")
         except Exception as e:
             print(f"Error: {e}")
 
